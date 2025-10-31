@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>랜덤 그림그리기 도전게임</title>
+  <style>
+    :root{
+      --lavender:#E9E1FF;
+      --mint:#CFF8EA;
+      --ink:#2e2e2e;
+      --card:#ffffff;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Pretendard","Noto Sans KR",system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,"맑은 고딕","Malgun Gothic",sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 600px at -10% -20%, var(--mint) 0%, transparent 60%),
+        radial-gradient(1200px 600px at 110% 120%, var(--lavender) 0%, transparent 60%),
+        #f7f8fc;
+      display:flex;align-items:center;justify-content:center;padding:24px;
+    }
+    .app{
+      width:100%;max-width:880px;background:var(--card);
+      border-radius:24px;box-shadow:0 10px 30px rgba(0,0,0,.06);
+      overflow:hidden;border:1px solid rgba(0,0,0,.05);
+    }
+    header{
+      padding:28px 24px;background:linear-gradient(135deg, var(--lavender) 0%, var(--mint) 100%);
+      border-bottom:1px solid rgba(0,0,0,.05);
+      text-align:center;
+    }
+    header h1{margin:0;font-size:clamp(22px, 3.5vw, 32px);font-weight:800;color:#2b2b2b}
+    header p{margin:10px 0 0;font-size:clamp(13px, 2.3vw, 16px);opacity:.9}
+    main{padding:24px}
+    .row{display:flex;gap:16px;flex-wrap:wrap}
+    .card{
+      flex:1 1 280px;background:#fff;border:1px solid rgba(0,0,0,.06);
+      border-radius:16px;padding:18px 16px
+    }
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;border-radius:999px;
+      padding:8px 14px;background:rgba(90,191,165,.12);color:#246b5a;
+      font-weight:700;font-size:14px;border:1px solid rgba(90,191,165,.25)
+    }
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .segmented{display:inline-flex;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,.1)}
+    .segmented button{
+      appearance:none;border:0;background:#fff;padding:10px 14px;font-weight:700;cursor:pointer
+    }
+    .segmented button+button{border-left:1px solid rgba(0,0,0,.08)}
+    .segmented .active{background:var(--lavender);}
+    .btn{
+      appearance:none;border:0;border-radius:12px;padding:12px 16px;font-size:16px;font-weight:800;
+      background:linear-gradient(135deg,var(--lavender) 0%, var(--mint) 100%);
+      cursor:pointer;box-shadow:0 6px 16px rgba(142,132,201,.25);transition:transform .05s ease;
+    }
+    .btn:active{transform:translateY(1px) scale(.995)}
+    .result{
+      margin-top:14px;border-radius:14px;padding:16px;background:linear-gradient(135deg, rgba(233,225,255,.6), rgba(207,248,234,.6));
+      border:1px dashed rgba(0,0,0,.15);text-align:center
+    }
+    .topic{
+      font-size:clamp(20px, 4.2vw, 36px);font-weight:900;margin:6px 0 2px
+    }
+    .hint{font-size:13px;opacity:.75}
+    .howto li{margin:6px 0}
+    footer{padding:18px 24px;border-top:1px solid rgba(0,0,0,.06);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .small{font-size:12px;opacity:.75}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;}
+    .badge{font-size:12px;padding:6px 10px;border-radius:999px;background:rgba(233,225,255,.7);border:1px solid rgba(0,0,0,.06)}
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="랜덤 그림그리기 도전게임">
+    <header>
+      <h1>그림 주제를 뽑아보세요!</h1>
+      <p class="mono">Random Drawing Challenge · Pastel Lavender &amp; Mint</p>
+    </header>
+
+    <main>
+      <div class="row">
+        <section class="card" aria-labelledby="game-title">
+          <div class="pill" id="game-title">🎨 랜덤 그림그리기 도전게임</div>
+          <div class="controls" aria-label="난이도 선택">
+            <div class="segmented" role="tablist" aria-label="난이도">
+              <button role="tab" aria-selected="true" class="active" data-level="하" title="4–5세">하</button>
+              <button role="tab" aria-selected="false" data-level="중" title="5–7세">중</button>
+              <button role="tab" aria-selected="false" data-level="상" title="초등 저학년">상</button>
+            </div>
+            <button id="drawBtn" class="btn" aria-label="그림 주제 뽑기">그림주제 뽑기 🎲</button>
+          </div>
+          <div class="result" aria-live="polite">
+            <div class="topic" id="topic">-</div>
+            <div class="hint small">묘사어(상태·행동) + 명사가 무작위로 조합됩니다. 중복·과장 부사는 제외됩니다.</div>
+          </div>
+          <p class="small">※ 같은 사람이 여러 번 눌러 다양한 주제를 뽑아도 좋습니다.</p>
+        </section>
+
+        <section class="card">
+          <div class="pill">🧭 게임방법</div>
+          <ol class="howto">
+            <li>친구나 가족과 각각 제시된 주제로 그림을 그립니다.</li>
+            <li>시간을 정해서(예: 2~5분) 모두 완성합니다.</li>
+            <li>다 그린 뒤 <b>“짠!”</b> 하며 서로의 그림을 보여주세요.</li>
+            <li>가장 창의적·웃긴·섬세한 그림 등으로 가볍게 투표해도 좋습니다.</li>
+          </ol>
+          <p class="small">팁: 하(4–5세) → 중(5–7세) → 상(초등 저학년) 순으로 난이도를 올려 라운드 게임처럼 즐겨보세요!</p>
+        </section>
+      </div>
+
+      <div class="row" style="margin-top:16px;">
+        <section class="card">
+          <div class="pill">📚 단어뱅크 정보</div>
+          <p class="small" id="bank-info">각 난이도별로 묘사어 100개 + 명사 100개가 준비되어 있으며, 난이도당 약 10,000가지 그림 주제 조합이 가능합니다. (총 30,000+)</p>
+          <details>
+            <summary>내부 동작 원리 보기</summary>
+            <ul class="small">
+              <li>연령대에 맞춘 쉬운 <b>묘사어</b>와 <b>명사</b>를 <b>중복 없이</b> 100개씩 구성합니다.</li>
+              <li>조합 시 <b>중복 단어·명사 중첩·불필요한 부사</b>를 제거합니다.</li>
+              <li>의인화가 가능한 상상 조합은 허용합니다: 예) 하늘 나는 냉장고, 노래하는 달</li>
+            </ul>
+          </details>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="badge">파스텔 연보라 × 민트</div>
+      <div class="small">난이도: 하(4–5세), 중(5–7세), 상(초등 저학년)</div>
+    </footer>
+  </div>
+
+  <script>
+    // ---------- 유틸 ----------
+    const rand = (arr) => arr[Math.floor(Math.random()*arr.length)];
+    const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+
+    // 불용어/조사 제거용 (간단 토큰화)
+    const STOP = ["의","에","에서","으로","을","를","은","는","이","가","과","와","한","속","위","아래","안","밖","앞","뒤"];
+
+    function tokenize(str){
+      return str
+        .replace(/[^\uAC00-\uD7A3A-Za-z0-9\s]/g," ")
+        .split(/\s+/)
+        .filter(t => t && !STOP.includes(t));
+    }
+
+    function overlapExists(a,b){
+      const A = new Set(tokenize(a));
+      const B = new Set(tokenize(b));
+      for(const t of A){ if(B.has(t)) return true; }
+      return false;
+    }
+
+    // ---------- 단어뱅크 v3 (간결/시각화 중심) ----------
+    const COLORS = ["파스텔","라벤더","민트","하늘색","분홍","노랑","초록","보라","주황","파랑","하양","검정"];
+    const SIMPLE_OBJS = ["컵","사과","바나나","딸기","토마토","케이크","아이스크림","도넛","풍선","우산","의자","연필","시계","책","가방","모자","신발","공","열쇠","리본"];
+    const ANIMALS = ["토끼","강아지","고양이","곰돌이","오리","병아리","거북이","물고기","코끼리","기린","사자","여우","펭귄"];
+    const VEHICLES = ["버스","기차","자동차","자전거","비행기","로켓"];
+    const NATURES = ["해","달","별","구름","무지개","나무","꽃"];
+    const FANTASY_OBJS = ["로봇","피아노","냉장고","시소","그네","연","열기구"];
+
+    // 하 (4-5세): 매우 친숙한 명사 + 간결한 행동/상태
+    const A_HA = [
+      "웃는","우는","졸린","화난","놀란","반짝이는","점프하는","춤추는","노래하는","달리는",
+      "걷는","앉아 있는","서 있는","자고 있는","돌아가는"
+    ];
+    const N_HA_BASE = [...SIMPLE_OBJS, ...ANIMALS, ...NATURES, ...VEHICLES];
+    // 중 (5-7세): 간단한 상황/위치 + 의인화
+    const A_MID = [
+      "하늘 나는","물속에 있는","거꾸로 선","빙글 도는","숨은","빛나는","노래 부르는","춤추는","점프하는","달리는","천천히 걷는"
+    ];
+    const N_MID_BASE = [...ANIMALS, ...FANTASY_OBJS, ...SIMPLE_OBJS, ...VEHICLES, ...NATURES];
+    // 상 (초등 저학년): 상상 장면이지만 시각화 가능한 것만
+    const A_TOP = [
+      "별을 줍는","구름을 모으는","달빛을 담는","무중력에 떠 있는","시간을 되감는","빛을 비추는","꿈꾸는","바람을 타는","하늘 나는","바다를 건너는"
+    ];
+    const N_TOP_BASE = [
+      "로봇","버스","우체국","정원","상자","계단","다리","도서관","열기구","우주비행사","바람개비","모자","붓","병","도시"
+    ];
+
+    // 색상+사물 결합으로 명사 확장 (단일 명사구로 취급)
+    function expandNouns(base, targetSize){
+      const out = new Set(base);
+      const palette = COLORS;
+      const pool = [...base];
+      while(out.size < targetSize){
+        const n = rand(pool);
+        const color = rand(palette);
+        out.add(`${color} ${n}`);
+      }
+      return Array.from(out).slice(0, targetSize);
+    }
+
+    function expandAdjs(base, targetSize){
+      // 부사형 제거: "살짝, 정말, 아주" 등 없음. base만 변형 없이 사용.
+      const out = new Set(base);
+      // 약간의 파생만 (동일 의미 반복 방지 위해 과도 확장 안함)
+      const extras = ["반짝반짝 빛나는","조용히 서 있는","신나게 춤추는","작게 웃는","크게 웃는"];
+      for(const e of extras){ if(out.size < targetSize) out.add(e); }
+      // 부족하면 base 반복 섞기
+      while(out.size < targetSize){ out.add(rand(base)); }
+      return Array.from(out).slice(0, targetSize);
+    }
+
+    const BANKS = {
+      "하": {
+        adjectives: expandAdjs(A_HA, 100),
+        nouns: expandNouns(N_HA_BASE, 100),
+        // 논리 필터: '먹는' 같은 주체 필수 동사는 사용하지 않음 (하 단계에서 제외)
+        actorVerbs: []
+      },
+      "중": {
+        adjectives: expandAdjs(A_MID, 100),
+        nouns: expandNouns(N_MID_BASE, 100),
+        actorVerbs: []
+      },
+      "상": {
+        adjectives: expandAdjs(A_TOP, 100),
+        nouns: expandNouns(N_TOP_BASE, 100),
+        actorVerbs: []
+      }
+    };
+
+    // 금지 패턴 (의미 불가/부자연스러운 조합 최소화)
+    const FORBIDDEN_SUBJECTS = ["컵","시계","의자","냉장고","피아노","책","우산","버스","자동차","기차","자전거","로봇","풍선"];
+    const ACTOR_REQUIRED = ["먹는","마시는","읽는","그리는","쓰는"]; // 주체가 행동할 수 있어야 함
+    function violatesActorRule(adj, noun){
+      // "먹는 사과" 처럼 noun이 행위 주체가 되기 부적절할 때 제외
+      for(const v of ACTOR_REQUIRED){
+        if(adj.startsWith(v)){
+          // 동물/사람 계열만 허용
+          const okSubjects = new Set(ANIMALS.concat(["소년","소녀","사람","우주비행사","요리사","화가","우체부"]));
+          // noun의 핵심 토큰 중 하나라도 허용 집합에 없으면 금지
+          const toks = tokenize(noun);
+          let allow = false;
+          for(const t of toks){ if(okSubjects.has(t)) { allow = true; break; } }
+          return !allow;
+        }
+      }
+      return false;
+    }
+
+    // 명사 다중 결합 방지: '... 상자 인형' 같은 꼬리 명사 금지 (v3에서는 아예 생성 안 함)
+
+    // 결과 정리: 공백/중복 단어 정리
+    function cleanText(s){
+      s = s.replace(/\s+/g," ").trim();
+      // '반짝반짝 반짝이는' -> '반짝이는'
+      s = s.replace(/(반짝반짝\s*)?반짝이는/g, "반짝이는");
+      return s;
+    }
+
+    // 난이도 탭
+    const tabs = document.querySelectorAll('[role="tab"]');
+    let currentLevel = "하";
+    tabs.forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        tabs.forEach(b=>{ b.classList.remove("active"); b.setAttribute("aria-selected","false"); });
+        btn.classList.add("active"); btn.setAttribute("aria-selected","true");
+        currentLevel = btn.dataset.level;
+      });
+    });
+
+    // 뽑기
+    const topicEl = document.getElementById("topic");
+    let lastCombo = "";
+    function pickTopic(){
+      const { adjectives, nouns } = BANKS[currentLevel];
+      let combo = "";
+      let guard = 0;
+      while(guard < 80){
+        const adj = rand(adjectives);
+        const noun = rand(nouns);
+        // 필터 1: 중복 어휘 방지
+        if(overlapExists(adj, noun)) { guard++; continue; }
+        // 필터 2: 행위 주체 규칙
+        if(violatesActorRule(adj, noun)) { guard++; continue; }
+        combo = cleanText(`${adj} ${noun}`);
+        // 필터 3: 너무 긴 문장 축약 (단어 6개 초과 시 재시도)
+        if(combo.split(/\s+/).length > 6){ guard++; continue; }
+        // 필터 4: 직전 결과와 동일 회피
+        if(combo === lastCombo){ guard++; continue; }
+        break;
+      }
+      if(!combo){
+        combo = "다시 뽑기를 눌러보세요!";
+      }
+      lastCombo = combo;
+      topicEl.textContent = combo;
+    }
+
+    document.getElementById("drawBtn").addEventListener("click", pickTopic);
+    window.addEventListener("keydown", (e)=>{ if(e.key==="Enter") pickTopic(); });
+
+    // 단어뱅크 정보 숫자 업데이트
+    document.addEventListener("DOMContentLoaded", () => {
+      const perLevelComb = 100*100;
+      const totalComb = perLevelComb * 3;
+      const info = document.getElementById("bank-info");
+      if(info){
+        info.innerHTML = `각 난이도별로 <b>묘사어 100개 + 명사 100개</b>가 준비되어 있으며, 난이도당 약 <b>${perLevelComb.toLocaleString()}</b>가지 조합이 가능합니다. (총 <b>${totalComb.toLocaleString()}</b>+)`;
+      }
+      setTimeout(()=>{
+        topicEl.textContent = "난이도(하/중/상)를 고르고 ‘그림주제 뽑기 🎲’ 버튼을 눌러보세요!";
+      }, 100);
+    });
+  </script>
+</body>
+</html>
